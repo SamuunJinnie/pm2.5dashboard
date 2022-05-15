@@ -6,7 +6,15 @@ import datetime
 
 
 old_basepath = '../basedata/PCD Data/Data before 2020-9'
+old_col_mapper = {'CO': 'CO', ' NO2': 'NO2', ' SO2 ': 'SO2', 'O3': 'O3', ' PM10': 'PM10', ' Wind speed': 'WS', ' Wind dir': 'WD',
+    ' Temp': 'Temp', ' PM2.5': 'PM25', 'PM10': 'PM10', 'PM2.5': 'PM25', 'NO2': 'NO2', 'SO2': 'SO2', 
+    'WS': 'WS', 'WD': 'WD', 'TEMP': 'Temp', 'RH': 'Rain', 'PM2.5 ': 'PM25', ' CO': 'CO', ' WD': 'WD', ' WS ': 'WS', 'Temp': 'Temp',
+    ' TEMP': 'Temp', ' RH': 'Rain', ' CO ': 'CO', ' Rain': 'Rain', 'CO(ppm)': 'CO', 'PM10(มคก./ลบ.ม.)': 'PM10', 'TMP': 'Temp'}
+old_to_drop = ['Unnamed: 11', ' Pressure', 'Unnamed: 10', 'Unnamed: 8', 'Unnamed: 9', 'NO', 'Nox', ' NO ', ' NOX ', ' Rel hum']
+
 new_basepath = '../basedata/PCD Data/Data after 2020-7/PCD data after 2020-7.csv'
+new_df_columns = ['stationID', 'PM25', 'PM10', 'NO2', 'SO2', 'CO', 'O3', 'datetime_aq']
+new_df = pd.read_csv(new_basepath, usecols=new_df_columns)
 
 # return dict mapping station to path
 def get_station_paths(basepath):
@@ -33,7 +41,7 @@ def get_lat_long(basepath):
         mapper['longs'].append(lat_long['long'])
     return pd.DataFrame(mapper)
 
-def replaceOutlier(df):
+def replace_outlier(df):
     Q1 = df.quantile(0.25)
     Q3 = df.quantile(0.75)
     IQR = Q3 - Q1
@@ -44,23 +52,37 @@ def replaceOutlier(df):
     return df_no_out
 
 def format_datetime_old_data(row):
-    date = str(row['ปี/เดือน/วัน'])
-    hour = int((row['ชั่วโมง']//100)%24)
-    str_datetime = f'20{date[:2]}-{date[2:4]}-{date[4:6]} {str(hour)}:00:00.000000 +0700'
-    datetime_obj = datetime.datetime.strptime(str_datetime, '%Y-%m-%d %H:%M:%S.%f %z')
-    return datetime_obj
+    if 'ปี/เดือน/วัน' in row.index:
+        date = str(row['ปี/เดือน/วัน'])
+        hour = int((row['ชั่วโมง']//100)%24)
+        str_datetime = f'20{date[:2]}-{date[2:4]}-{date[4:6]} {str(hour)}:00:00.000000 +0700'
+    else:
+        date = str(row['วัน/เดือน/ปี'])
+        hour = int((row['ชั่วโมง']//100)%24)
+        str_datetime = f'20{date[4:6]}-{date[2:4]}-{date[:2]} {str(hour)}:00:00.000000 +0700'
+    return datetime.datetime.strptime(str_datetime, '%Y-%m-%d %H:%M:%S.%f %z')
+
+def format_datetime_new_data(dt):
+    return datetime.datetime.strptime(f'{dt} +0700', '%Y-%m-%d %H:%M:%S.%f %z')
 
 def prepare_old_station_data(station):
-    columns = ['ปี/เดือน/วัน', 'ชั่วโมง', 'PM10', 'PM2.5', 'CO', 'NO2', 'O3', 'WS', 'WD', 'TEMP', 'RH']
+    
     path = old_station_paths[station]
-    df = pd.read_excel(path, index_col=None, usecols=columns)
-    df = df.loc[~df['ปี/เดือน/วัน'].isna()].copy()
-    df.dropna(how='all', inplace=True)
+    df = pd.read_excel(path, index_col=None).iloc[:, :12]
 
+    if 'ปี/เดือน/วัน' in df.columns: 
+        target = 'ปี/เดือน/วัน'
+    else:
+        target = 'วัน/เดือน/ปี'
+    df = df.loc[~df[target].isna()].copy()
+    df = df[df[target].apply(lambda d: d >= 100000)]
     df['datetime'] = df.apply(lambda row: format_datetime_old_data(row), axis=1)
-    df.drop(columns=['ปี/เดือน/วัน', 'ชั่วโมง'], inplace=True)
+    df.drop(columns=[target, 'ชั่วโมง'], inplace=True)
     df.drop_duplicates(inplace=True, subset=['datetime'])
     df.set_index('datetime', inplace=True)
+
+    df.rename(columns=old_col_mapper, inplace=True)
+    df.drop(old_to_drop, axis=1, inplace=True, errors='ignore')
 
     errors = set()
     for col in df.columns:
@@ -72,12 +94,26 @@ def prepare_old_station_data(station):
     for err in errors:
         df.replace(err, np.NaN, inplace=True)
     df.astype(float)
+    df = df.loc[(df.isna().sum(axis=1) < 10), :]
 
     df.interpolate(inplace=True)
+    df = df.interpolate().bfill()
     df = df.resample('h').ffill()
-    df = replaceOutlier(df)
+    df = replace_outlier(df)
     return df
 
+def prepare_new_station_data(station):
+    df = new_df[new_df.stationID == station].copy()
+    df['datetime_aq'] = df['datetime_aq'].apply(lambda dt: format_datetime_new_data(dt))
+    df.drop(columns=['stationID'], inplace=True)
+    df.drop_duplicates(inplace=True, subset=['datetime_aq'])
+    df.set_index('datetime_aq', inplace=True)
+
+    df.interpolate(inplace=True)
+    df = df.interpolate().bfill()
+    df = df.resample('h').ffill()
+    df = replace_outlier(df)
+    return df
 # ==================================================================================================
 makedirs('prepared_data', exist_ok=True)
 makedirs('prepared_data/others', exist_ok=True)
@@ -94,9 +130,17 @@ if not exists(old_station_path_path):
 
 
 makedirs('prepared_data/stations', exist_ok=True)
-
-print(prepare_old_station_data('76t'))
-
-
-
-
+prepared_data_each_station_path = 'prepared_data/stations/'
+false_list = []
+for station in new_df['stationID'].unique():
+    df = prepare_new_station_data(station)
+    try:
+        cur_station_path = join(prepared_data_each_station_path, f'{station}.csv')
+        if not exists(cur_station_path):
+            if station in old_station_paths:
+                old_df = prepare_old_station_data(station)
+                df = pd.concat([old_df, df]).reset_index().rename(columns={'index':'datetime'}).drop_duplicates(subset=['datetime']).set_index('datetime')
+            df.to_csv(cur_station_path)
+    except:
+        print(station)
+        false_list.append(station)
