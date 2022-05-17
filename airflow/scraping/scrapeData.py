@@ -45,7 +45,7 @@ def scrapeAllData(lng,lat):
     # o3 = scrape()
     rh = scrape(f'https://earth.nullschool.net/#current/wind/surface/level/anim=off/overlay=relative_humidity/equirectangular/loc={lng},{lat}')
     temp = scrape(f'https://earth.nullschool.net/#current/wind/surface/level/anim=off/overlay=temp/equirectangular/loc={lng},{lat}')
-    return {"datetime_aq": str(datetime.now()),"data":{'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}}
+    return {"datetime_aq": str(datetime.now()),'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}
 
 # print(scrapeAllData(100.141,14.898))
     
