@@ -35,7 +35,7 @@ def scrape(url):
     data = element.text.split(' ')[0]
     return data
 
-def scrapeAll(lng,lat):
+def scrapeAllData(lng,lat):
     #PM25 PM10 NO2 SO2 Co O3 + RH TEMP
     pm25 = scrape(f'https://earth.nullschool.net/#current/particulates/surface/level/anim=off/overlay=pm2.5/equirectangular/loc={lng},{lat}')
     pm10 =  scrape(f'https://earth.nullschool.net/#current/particulates/surface/level/anim=off/overlay=pm10/equirectangular/loc={lng},{lat}')
@@ -47,5 +47,6 @@ def scrapeAll(lng,lat):
     temp = scrape(f'https://earth.nullschool.net/#current/wind/surface/level/anim=off/overlay=temp/equirectangular/loc={lng},{lat}')
     return {"datetime_aq": str(datetime.now()),"data":{'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}}
 
-print(scrapeAll(100.141,14.898))
+# print(scrapeAllData(100.141,14.898))
     
+def scrapeAllStation():
