@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
 import time
-from datetime import datetime 
+from datetime import datetime,timezone 
 import os
 
 
@@ -35,21 +35,24 @@ def scrape(url):
     data = element.text.split(' ')[0]
     return data
 
-def scrapeAllData(lng,lat):
+def scrapeAllData(lng,lat,year,month,day,hour,datetime):
+    # url = f'https://earth.nullschool.net/#{year}/{month:02d}/{day:02d}/{hour:02d}00Z/chem/surface/level/overlay=so2smass/equirectangular/loc={lng},{lat}'
+    # y,m,d,h : UTC+0 that use for scrape in nullschool
     #PM25 PM10 NO2 SO2 Co O3 + RH TEMP
-    pm25 = scrape(f'https://earth.nullschool.net/#current/particulates/surface/level/anim=off/overlay=pm2.5/equirectangular/loc={lng},{lat}')
-    pm10 =  scrape(f'https://earth.nullschool.net/#current/particulates/surface/level/anim=off/overlay=pm10/equirectangular/loc={lng},{lat}')
-    no2 = scrape(f'https://earth.nullschool.net/#current/chem/surface/level/anim=off/overlay=no2/equirectangular/loc={lng},{lat}')
-    co = scrape(f'https://earth.nullschool.net/#current/chem/surface/level/anim=off/overlay=cosc/equirectangular/loc={lng},{lat}')
-    so2 = scrape(f'https://earth.nullschool.net/#current/chem/surface/level/anim=off/overlay=so2smass/equirectangular/loc={lng},{lat}')
+    time_utc0 = datetime(year,month,day,hour, tzinfo=timezone.utc)
+    time_utc7 = time_utc0.replace(tzinfo=timezone.utc).astimezone(tz=None)
+    pm25 = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/particulates/surface/level/anim=off/overlay=pm2.5/equirectangular/loc={lng},{lat}')
+    pm10 =  scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/particulates/surface/level/anim=off/overlay=pm10/equirectangular/loc={lng},{lat}')
+    no2 = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/chem/surface/level/anim=off/overlay=no2/equirectangular/loc={lng},{lat}')
+    co = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/chem/surface/level/anim=off/overlay=cosc/equirectangular/loc={lng},{lat}')
+    so2 = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/chem/surface/level/anim=off/overlay=so2smass/equirectangular/loc={lng},{lat}')
     # o3 = scrape()
-    rh = scrape(f'https://earth.nullschool.net/#current/wind/surface/level/anim=off/overlay=relative_humidity/equirectangular/loc={lng},{lat}')
-    temp = scrape(f'https://earth.nullschool.net/#current/wind/surface/level/anim=off/overlay=temp/equirectangular/loc={lng},{lat}')
-    return {"datetime_aq": str(datetime.now()),'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}
+    rh = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=relative_humidity/equirectangular/loc={lng},{lat}')
+    temp = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=temp/equirectangular/loc={lng},{lat}')
+    return {"datetime_aq": str(time_utc7),'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}
 
-# print(scrapeAllData(100.141,14.898))
-    
-def scrapeAllStations() :
+def scrapeAllStations(datetime) :
+    print(datetime)
     df = pd.read_csv('../../model/prepared_data/others/station_lat_long.csv')
     pm25_col = []
     pm10_col = []
@@ -59,8 +62,12 @@ def scrapeAllStations() :
     rh_col = []
     temp_col = []
     datetime_col = []
+    temp1, temp2 = datetime.split("T")
+    year,month,day = temp1.split("-")
+    temp3 = temp2.split(":")
+    hour = temp3[0]
     for ind in df.index :
-        data = scrapeAllData(df['longs'][ind], df['lats'][ind])
+        data = scrapeAllData(df['longs'][ind], df['lats'][ind],year,month,day,hour)
         pm25_col.append(data['pm25'])
         pm10_col.append(data['pm10'])
         no2_col.append(data['no2'])
@@ -77,5 +84,5 @@ def scrapeAllStations() :
     df['rh'] = rh_col
     df['temp'] = temp_col
     df['datetime_aq'] = datetime_col
-
     return df
+
