@@ -49,5 +49,33 @@ def scrapeAllData(lng,lat):
 
 # print(scrapeAllData(100.141,14.898))
     
-def scrapeAllStation():
-    "eiei"
+def scrapeAllStations() :
+    df = pd.read_csv('../../model/prepared_data/others/station_lat_long.csv')
+    pm25_col = []
+    pm10_col = []
+    no2_col = []
+    co_col = []
+    so2_col = []
+    rh_col = []
+    temp_col = []
+    datetime_col = []
+    for ind in df.index :
+        data = scrapeAllData(df['longs'][ind], df['lats'][ind])
+        pm25_col.append(data['pm25'])
+        pm10_col.append(data['pm10'])
+        no2_col.append(data['no2'])
+        co_col.append(data['co'])
+        so2_col.append(data['so2'])
+        rh_col.append(data['rh'])
+        temp_col.append(data['temp'])
+        datetime_col.append(data['datetime_aq'])
+    df['pm25'] = pm25_col
+    df['pm10'] = pm10_col
+    df['no2'] = no2_col
+    df['co'] = co_col
+    df['so2'] = so2_col
+    df['rh'] = rh_col
+    df['temp'] = temp_col
+    df['datetime_aq'] = datetime_col
+
+    return df
