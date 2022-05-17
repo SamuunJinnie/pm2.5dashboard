@@ -50,3 +50,4 @@ def scrapeAllData(lng,lat):
 # print(scrapeAllData(100.141,14.898))
     
 def scrapeAllStation():
+    "eiei"
