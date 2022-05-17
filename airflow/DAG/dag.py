@@ -8,10 +8,8 @@ from airflow.providers.http.operators.http import SimpleHttpOperator
 
 import json
 from datetime import datetime
-from scrapeData import scrapeAllStations
+from scrapeData import scrapeAllStations, scrape, scrapeAllData
 
-with DAG('scrape',description='Scrape data every hour',tags=['pm2.5_dashboard'],schedule_interval='@hourly',start_date=datetime(2022, 5, 17),catchup = True) as dag:
+with DAG('scrape3',description='Scrape data every hour',tags=['pm2.5_dashboard'],schedule_interval='@hourly',start_date=datetime(2022, 5, 17),catchup = True) as dag:
     scrapeDag = PythonOperator(task_id='scrapeAllStations', python_callable=scrapeAllStations,op_args=["{{ dag_run.logical_date | ts }}"])
     scrapeDag
-    # dummyEiEi = PythonOperator(task_id='scrapeAllStations', python_callable=dummy,op_args=["{{ dag_run.logical_date | ts }}"])
-    # dummyEiEi

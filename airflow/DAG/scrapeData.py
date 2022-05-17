@@ -13,11 +13,11 @@ import os
 
 
 
-service = ChromeService(executable_path=ChromeDriverManager().install())
-driver = webdriver.Chrome(service=service)
+# service = ChromeService(executable_path=ChromeDriverManager().install())
+# driver = webdriver.Chrome(service=service)
 
 
-def scrape(url):
+def scrape(url, driver):
     # url = f'https://earth.nullschool.net/chem/surface/level/anim=off/overlay=so2smass/equirectangular/loc={lng},{lat}'
     #go to web/#current
     driver.get(url=url)
@@ -35,25 +35,28 @@ def scrape(url):
     data = element.text.split(' ')[0]
     return data
 
-def scrapeAllData(lng,lat,year,month,day,hour,datetime):
+def scrapeAllData(lng,lat,year,month,day,hour,driver):
     # url = f'https://earth.nullschool.net/#{year}/{month:02d}/{day:02d}/{hour:02d}00Z/chem/surface/level/overlay=so2smass/equirectangular/loc={lng},{lat}'
     # y,m,d,h : UTC+0 that use for scrape in nullschool
     #PM25 PM10 NO2 SO2 Co O3 + RH TEMP
-    time_utc0 = datetime(year,month,day,hour, tzinfo=timezone.utc)
+    time_utc0 = datetime(int(year),int(month),int(day),int(hour), tzinfo=timezone.utc)
     time_utc7 = time_utc0.replace(tzinfo=timezone.utc).astimezone(tz=None)
-    pm25 = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/particulates/surface/level/anim=off/overlay=pm2.5/equirectangular/loc={lng},{lat}')
-    pm10 =  scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/particulates/surface/level/anim=off/overlay=pm10/equirectangular/loc={lng},{lat}')
-    no2 = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/chem/surface/level/anim=off/overlay=no2/equirectangular/loc={lng},{lat}')
-    co = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/chem/surface/level/anim=off/overlay=cosc/equirectangular/loc={lng},{lat}')
-    so2 = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/chem/surface/level/anim=off/overlay=so2smass/equirectangular/loc={lng},{lat}')
+    pm25 = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/particulates/surface/level/anim=off/overlay=pm2.5/equirectangular/loc={lng},{lat}', driver)
+    pm10 =  scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/particulates/surface/level/anim=off/overlay=pm10/equirectangular/loc={lng},{lat}', driver)
+    no2 = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/chem/surface/level/anim=off/overlay=no2/equirectangular/loc={lng},{lat}', driver)
+    co = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/chem/surface/level/anim=off/overlay=cosc/equirectangular/loc={lng},{lat}', driver)
+    so2 = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/chem/surface/level/anim=off/overlay=so2smass/equirectangular/loc={lng},{lat}', driver)
     # o3 = scrape()
-    rh = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=relative_humidity/equirectangular/loc={lng},{lat}')
-    temp = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=temp/equirectangular/loc={lng},{lat}')
+    rh = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=relative_humidity/equirectangular/loc={lng},{lat}', driver)
+    temp = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=temp/equirectangular/loc={lng},{lat}', driver)
     return {"datetime_aq": str(time_utc7),'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}
 
-def scrapeAllStations(datetime) :
-    print(datetime)
-    df = pd.read_csv('../../model/prepared_data/others/station_lat_long.csv')
+def scrapeAllStations(datetime):
+
+    service = ChromeService(executable_path=ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service)
+
+    df = pd.read_csv('station_lat_long.csv')
     pm25_col = []
     pm10_col = []
     no2_col = []
@@ -67,7 +70,7 @@ def scrapeAllStations(datetime) :
     temp3 = temp2.split(":")
     hour = temp3[0]
     for ind in df.index :
-        data = scrapeAllData(df['longs'][ind], df['lats'][ind],year,month,day,hour)
+        data = scrapeAllData(df['longs'][ind], df['lats'][ind],year,month,day,hour,driver)
         pm25_col.append(data['pm25'])
         pm10_col.append(data['pm10'])
         no2_col.append(data['no2'])
@@ -84,5 +87,11 @@ def scrapeAllStations(datetime) :
     df['rh'] = rh_col
     df['temp'] = temp_col
     df['datetime_aq'] = datetime_col
+
+    driver.quit()
+
     return df
+
+
+
 
