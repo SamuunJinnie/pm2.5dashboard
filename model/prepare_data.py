@@ -1,5 +1,5 @@
-from os import listdir, makedirs
-from os.path import isfile, join, exists
+from os import listdir
+from os.path import isfile, join
 import pandas as pd
 import numpy as np
 import datetime
@@ -11,7 +11,7 @@ old_col_mapper = {'CO': 'CO', ' NO2': 'NO2', ' SO2 ': 'SO2', 'O3': 'O3', ' PM10'
     'WS': 'WS', 'WD': 'WD', 'TEMP': 'Temp', 'RH': 'Rain', 'PM2.5 ': 'PM25', ' CO': 'CO', ' WD': 'WD', ' WS ': 'WS', 'Temp': 'Temp',
     ' TEMP': 'Temp', ' RH': 'Rain', ' CO ': 'CO', ' Rain': 'Rain', 'CO(ppm)': 'CO', 'PM10(มคก./ลบ.ม.)': 'PM10', 'TMP': 'Temp'}
 # old_to_drop = ['NO', 'Nox', ' NO ', ' NOX ', ' Glob rad', ' Total HC', 'CH4 (ppm)', 'Pressure', ' Rel hum', ' Pressure']
-old_to_have = ['CO', 'NO2', 'SO2', 'O3', 'PM10', 'WS', 'WD', 'Temp', 'Rain', 'PM25']
+to_have = ['CO', 'NO2', 'SO2', 'O3', 'PM10', 'WS', 'WD', 'Temp', 'Rain', 'PM25']
 
 new_basepath = '../basedata/PCD Data/Data after 2020-7/PCD data after 2020-7.csv'
 new_df_columns = ['stationID', 'PM25', 'PM10', 'NO2', 'SO2', 'CO', 'O3', 'datetime_aq']
@@ -70,6 +70,7 @@ def format_datetime_new_data(dt):
     return datetime.datetime.strptime(f'{dt} +0700', '%Y-%m-%d %H:%M:%S.%f %z')
 
 def prepare_old_station_data(station):
+    old_station_paths = get_station_paths(old_basepath)
     path = old_station_paths[station]
     df = pd.read_excel(path, index_col=None).iloc[:, :12]
 
@@ -85,9 +86,9 @@ def prepare_old_station_data(station):
     df.set_index('datetime', inplace=True)
 
     df.rename(columns=old_col_mapper, inplace=True)
-    for col in list(set(old_to_have) - set(df.columns)):
+    for col in list(set(to_have) - set(df.columns)):
             df[col] = np.NaN
-    df = df[old_to_have]
+    df = df[to_have]
     # df.drop(old_to_drop, axis=1, inplace=True, errors='ignore')
 
     errors = set()
@@ -132,41 +133,7 @@ def prepare_new_station_data(station):
     df = df.interpolate().bfill()
     df = df.resample('h').ffill()
     df = replace_outlier(df)
+    for col in list(set(to_have) - set(df.columns)):
+            df[col] = np.NaN
+    df = df[to_have]
     return df
-# ==================================================================================================
-makedirs('prepared_data', exist_ok=True)
-makedirs('prepared_data/others', exist_ok=True)
-station_lat_long_path = 'prepared_data/others/station_lat_long.csv'
-if not exists(station_lat_long_path):
-    station_lat_long = get_lat_long('../basedata/PCD Data/Data after 2020-7/PCD data after 2020-7.csv')
-    station_lat_long.to_csv(station_lat_long_path)
-
-old_station_path_path = 'prepared_data/others/old_station_path.csv'
-old_station_paths = get_station_paths(old_basepath)
-if not exists(old_station_path_path):
-    old_station_paths_df = pd.DataFrame(old_station_paths.items(), columns=['station', 'path'])
-    old_station_paths_df.to_csv(old_station_path_path)
-
-
-makedirs('prepared_data/stations', exist_ok=True)
-prepared_data_each_station_path = 'prepared_data/stations/'
-false_list = []
-i = 0
-for station in new_df['stationID'].unique():
-    cur_station_path = join(prepared_data_each_station_path, f'{station}.csv')
-    try:
-        if not exists(cur_station_path):
-            df = prepare_new_station_data(station)
-            if station in old_station_paths:
-                old_df = prepare_old_station_data(station)
-                df = pd.concat([old_df, df]).reset_index().rename(columns={'index':'datetime'}).drop_duplicates(subset=['datetime']).set_index('datetime')
-            else:
-                df.reset_index(inplace=True)
-                df.rename(columns={'datetime_aq':'datetime'}, inplace=True)
-                df.set_index('datetime', inplace=True)
-            df.to_csv(cur_station_path)
-            print(i, ':', station, ': complete')
-            i += 1
-    except:
-        print(station, ': failed')
-        false_list.append(station)
