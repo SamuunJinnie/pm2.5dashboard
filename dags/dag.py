@@ -12,4 +12,8 @@ from scrapeData import scrapeAllStations, scrape, scrapeAllData
 
 with DAG('scrape',description='Scrape data every hour',tags=['pm2.5_dashboard'],schedule_interval='@hourly',start_date=datetime(2022, 5, 18),catchup = True) as dag:
     scrapeDag = PythonOperator(task_id='scrapeAllStations', python_callable=scrapeAllStations,op_args=["{{ dag_run.logical_date | ts }}"])
-    scrapeDag
+    dummy = DummyOperator(task_id='finish')
+    scrapeDag >> dummy
+    print("SUCCESS WOO HOO")
+    print(scrapeDag.output)
+    print("BYE BITCHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")

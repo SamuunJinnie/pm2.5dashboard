@@ -6,7 +6,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-
+# import chromedriver_autoinstaller
 import time
 from datetime import datetime,timezone 
 import os
@@ -52,11 +52,16 @@ def scrapeAllData(lng,lat,year,month,day,hour,driver):
     return {"datetime_aq": str(time_utc7),'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}
 
 def scrapeAllStations(datetime):
+    # chromedriver_autoinstaller.install()
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
 
     service = ChromeService(executable_path=ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service)
+    driver = webdriver.Chrome(service=service,options = chrome_options)
 
-    df = pd.read_csv('station_lat_long.csv')
+    df = pd.read_csv('/opt/airflow/dags/station_lat_long.csv')
     pm25_col = []
     pm10_col = []
     no2_col = []
@@ -70,6 +75,7 @@ def scrapeAllStations(datetime):
     temp3 = temp2.split(":")
     hour = temp3[0]
     for ind in df.index :
+        print("index : ",ind)
         data = scrapeAllData(df['longs'][ind], df['lats'][ind],year,month,day,hour,driver)
         pm25_col.append(data['pm25'])
         pm10_col.append(data['pm10'])
