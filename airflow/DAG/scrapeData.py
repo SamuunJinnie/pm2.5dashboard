@@ -15,7 +15,7 @@ import os
 
 service = ChromeService(executable_path=ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service)
-
+df = pd.read_csv('../../model/prepared_data/others/station_lat_long.csv')
 
 def scrape(url):
     # url = f'https://earth.nullschool.net/chem/surface/level/anim=off/overlay=so2smass/equirectangular/loc={lng},{lat}'
@@ -35,7 +35,7 @@ def scrape(url):
     data = element.text.split(' ')[0]
     return data
 
-def scrapeAllData(lng,lat,year,month,day,hour,datetime):
+def scrapeAllData(lng,lat,year,month,day,hour):
     # url = f'https://earth.nullschool.net/#{year}/{month:02d}/{day:02d}/{hour:02d}00Z/chem/surface/level/overlay=so2smass/equirectangular/loc={lng},{lat}'
     # y,m,d,h : UTC+0 that use for scrape in nullschool
     #PM25 PM10 NO2 SO2 Co O3 + RH TEMP
@@ -53,7 +53,6 @@ def scrapeAllData(lng,lat,year,month,day,hour,datetime):
 
 def scrapeAllStations(datetime) :
     print(datetime)
-    df = pd.read_csv('../../model/prepared_data/others/station_lat_long.csv')
     pm25_col = []
     pm10_col = []
     no2_col = []
@@ -86,3 +85,5 @@ def scrapeAllStations(datetime) :
     df['datetime_aq'] = datetime_col
     return df
 
+scrapeAllStations("2022-05-17T04:00:00+00:00")
+driver.quit()
