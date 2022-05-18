@@ -8,11 +8,18 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 # import chromedriver_autoinstaller
 import time
+import psycopg2
 from datetime import datetime,timezone 
 import os
 
-
-
+print('------------- Connect Database -------------')
+conn = psycopg2.connect(database='airflow', user='airflow', password='airflow')
+cursor = conn.cursor()
+print('------------- conn -------------')
+print(conn)
+print('------------- cursor -------------')
+print(cursor)
+print('------------- Suscessfully -------------')
 # service = ChromeService(executable_path=ChromeDriverManager().install())
 # driver = webdriver.Chrome(service=service)
 
@@ -35,7 +42,7 @@ def scrape(url, driver):
     data = element.text.split(' ')[0]
     return data
 
-def scrapeAllData(lng,lat,year,month,day,hour,driver):
+def scrapeAllData(stationID,lng,lat,year,month,day,hour,driver):
     # url = f'https://earth.nullschool.net/#{year}/{month:02d}/{day:02d}/{hour:02d}00Z/chem/surface/level/overlay=so2smass/equirectangular/loc={lng},{lat}'
     # y,m,d,h : UTC+0 that use for scrape in nullschool
     #PM25 PM10 NO2 SO2 Co O3 + RH TEMP
@@ -49,7 +56,14 @@ def scrapeAllData(lng,lat,year,month,day,hour,driver):
     # o3 = scrape()
     rh = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=relative_humidity/equirectangular/loc={lng},{lat}', driver)
     temp = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=temp/equirectangular/loc={lng},{lat}', driver)
-    return {"datetime_aq": str(time_utc7),'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}
+    query = "INSERT INTO raw_data (stationID,lat,lng,pm25,pm10,no2,so2,co,rh,temp,datetime_aq) VALUES (%s, %f, %f, %f, %f,%f,%f,%f,%f,%f,%s);"
+    data = (stationID,lat,lng,pm25,pm10,no2,so2,co,rh,temp,str(time_utc7))
+    cursor.execute(query, data)
+    print('----------------------------------------')
+    records = cursor.fetchall()
+    print(records)
+    # return {"datetime_aq": str(time_utc7),'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}
+    return
 
 def scrapeAllStations(datetime):
     # chromedriver_autoinstaller.install()
@@ -62,41 +76,40 @@ def scrapeAllStations(datetime):
     driver = webdriver.Chrome(service=service,options = chrome_options)
 
     df = pd.read_csv('/opt/airflow/dags/station_lat_long.csv')
-    pm25_col = []
-    pm10_col = []
-    no2_col = []
-    co_col = []
-    so2_col = []
-    rh_col = []
-    temp_col = []
-    datetime_col = []
+    # pm25_col = []
+    # pm10_col = []
+    # no2_col = []
+    # co_col = []
+    # so2_col = []
+    # rh_col = []
+    # temp_col = []
+    # datetime_col = []
     temp1, temp2 = datetime.split("T")
     year,month,day = temp1.split("-")
     temp3 = temp2.split(":")
     hour = temp3[0]
     for ind in df.index :
         print("index : ",ind)
-        data = scrapeAllData(df['longs'][ind], df['lats'][ind],year,month,day,hour,driver)
-        pm25_col.append(data['pm25'])
-        pm10_col.append(data['pm10'])
-        no2_col.append(data['no2'])
-        co_col.append(data['co'])
-        so2_col.append(data['so2'])
-        rh_col.append(data['rh'])
-        temp_col.append(data['temp'])
-        datetime_col.append(data['datetime_aq'])
-    df['pm25'] = pm25_col
-    df['pm10'] = pm10_col
-    df['no2'] = no2_col
-    df['co'] = co_col
-    df['so2'] = so2_col
-    df['rh'] = rh_col
-    df['temp'] = temp_col
-    df['datetime_aq'] = datetime_col
-
+        data = scrapeAllData(df['stationIDs'][ind],df['longs'][ind], df['lats'][ind],year,month,day,hour,driver)
+        # pm25_col.append(data['pm25'])
+        # pm10_col.append(data['pm10'])
+        # no2_col.append(data['no2'])
+        # co_col.append(data['co'])
+        # so2_col.append(data['so2'])
+        # rh_col.append(data['rh'])
+        # temp_col.append(data['temp'])
+        # datetime_col.append(data['datetime_aq'])
+    # df['pm25'] = pm25_col
+    # df['pm10'] = pm10_col
+    # df['no2'] = no2_col
+    # df['co'] = co_col
+    # df['so2'] = so2_col
+    # df['rh'] = rh_col
+    # df['temp'] = temp_col
+    # df['datetime_aq'] = datetime_col
+    conn.commit()
     driver.quit()
-    return df
-
+    return
 
 
 

@@ -26,7 +26,8 @@ USER airflow
 RUN pip install docker && \
     pip install selenium && \
     pip install webdriver_manager && \
-    pip install chromedriver-autoinstaller
+    pip install chromedriver-autoinstaller && \
+    pip install psycopg2-binary
 
 
 # mkdir downloads
