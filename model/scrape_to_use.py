@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 service = ChromeService(executable_path=ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service)
 import time
+import numpy as np
 
 def scrape(url):
     # url = f'https://earth.nullschool.net/chem/surface/level/anim=off/overlay=so2smass/equirectangular/loc={lng},{lat}'
@@ -22,6 +23,8 @@ def scrape(url):
                 continue
             else :
                 break
+    if data_status.text=="Data download failed":
+        return np.NaN
     #so2
     data = element.text.split(' ')[0]
     return data
