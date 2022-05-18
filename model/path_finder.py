@@ -17,6 +17,7 @@ def prep_3_day_non_correlate_iov(first_valid_datetime, last_valid_datetime, offs
         label += 1
     to_use = []
     set_no_list = []
+    flags = []
     set_no = 0
     for label in start_of_sets:
         start_of_label = np.random.choice(start_of_sets[label])
@@ -24,8 +25,14 @@ def prep_3_day_non_correlate_iov(first_valid_datetime, last_valid_datetime, offs
         for i in range(24):
             to_use.append(start_of_label + datetime.timedelta(hours=3*i))
             set_no_list.append(set_no)
+            if i <8:
+                flags.append('I')
+            elif i <16:
+                flags.append('O')
+            else:
+                flags.append('V')
         set_no += 1
-    return pd.DataFrame({'datetime':to_use, 'set_no':set_no_list}) 
+    return pd.DataFrame({'datetime':to_use, 'set_no':set_no_list, 'flag':flags}) 
 
 def prep_3_day_correlatable_iov(first_valid_datetime, last_valid_datetime, offset):
     start_allset = f'{first_valid_datetime.year}-01-01 00:00:00+07:00'
@@ -38,6 +45,7 @@ def prep_3_day_correlatable_iov(first_valid_datetime, last_valid_datetime, offse
         start_datetime += datetime.timedelta(hours=24)
     to_use = []
     set_no_list = []
+    flags = []
     if len(start_of_sets) > 40:
         start_of_sets = np.random.choice(start_of_sets, size=40)
     set_no = 0
@@ -46,8 +54,14 @@ def prep_3_day_correlatable_iov(first_valid_datetime, last_valid_datetime, offse
         for i in range(24):
             to_use.append(starter + datetime.timedelta(hours=3*i))
             set_no_list.append(set_no)
+            if i <8:
+                flags.append('I')
+            elif i <16:
+                flags.append('O')
+            else:
+                flags.append('V')
         set_no += 1
-    return pd.DataFrame({'datetime':to_use, 'set_no':set_no_list}) 
+    return pd.DataFrame({'datetime':to_use, 'set_no':set_no_list, 'flag':flags}) 
 
 def prep_3_day_iov(dt_list, offset):
     first_valid_datetime = dt_list[0]

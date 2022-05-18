@@ -42,10 +42,10 @@ for i in range(start, stop):
     cur_station = station_lat_long.iloc[i]
     fn = f'{cur_station.stationIDs}.csv'
     df = pd.read_csv(join(data_base_path, fn)).set_index('datetime')
-    to_use = pd.read_csv(join(to_use_base_path, fn)).set_index('datetime')
-    df = df.loc[to_use.index]
-    df['set_no'] = to_use['set_no']
+    to_use = pd.read_csv(join(to_use_base_path, fn),usecols=['datetime', 'set_no', 'flag']).set_index('datetime')
+    df = df.merge(to_use, left_on='datetime', right_on='datetime')
     df.index = pd.to_datetime(df.index , format='%Y-%m-%d %H:%M:%S%z')
+    row_no = 0
     for datetime in df.index:
         datetime_utc = datetime.astimezone(pytz.utc)
         lat = station_lat_long.iloc[i]['lats']
@@ -63,16 +63,11 @@ for i in range(start, stop):
             'Rain':f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=relative_humidity/equirectangular/loc={lng},{lat}',
             'Temp':f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=temp/equirectangular/loc={lng},{lat}'
         }
-        cur_row = df.loc[datetime]
+        cur_row = df.iloc[row_no]
         na_checker = cur_row.isna()
         for col in cur_row.index:
             if na_checker[col] and col in urls:
                 data = scrape(urls[col])
                 df.loc[datetime, col] = data
+        row_no += 1
     df.to_csv(join(scraped_base_path, fn))
-                
-            
-    
-    
-
-    
