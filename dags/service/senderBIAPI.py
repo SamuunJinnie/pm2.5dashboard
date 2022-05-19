@@ -37,7 +37,7 @@ def sendToBI(typeS):
   df['type'] = typeS
 
   if typeS == 'history':
-    df.drop([ "pm10", "rh", "temp", "traffic"], axis='columns',inplace=True)
+    df.drop([ "pm10", "rh", "temp"], axis='columns',inplace=True)
 
     name_mapper = {
         'pm25': 'value',
