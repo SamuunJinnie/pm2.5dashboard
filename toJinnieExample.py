@@ -26,7 +26,7 @@ print('connected to DB !')
 #     rh = random.uniform(1, 100)
 #     temp = random.uniform(1, 100)
 #     traffic = random.uniform(1, 10)
-#     datetime_aq = "2000-08-31T12:00:000"
+#     datetime_aq = "2022-05-19T13:22:25.231Z"
 
 #     data = (device,lat,lng,pm25,pm10,rh,temp,traffic,datetime_aq)
 #     cursor.execute(queryStr, data)
@@ -69,7 +69,7 @@ df_trimmed = df_trimmed.rename(columns=name_mapper)
 df_trimmed['type'] = 'history'
 
 print('---------- after alter df --------')
-print (df_trimmed.head())
+print (df_trimmed.tail())
 
 
 
@@ -83,7 +83,7 @@ json.dumps(parsed, indent=4)
 
 # post to jinnie
 
-url = "https://api.powerbi.com/beta/271d5e7b-1350-4b96-ab84-52dbda4cf40c/datasets/e63a7fed-c2ee-4b88-9cc3-8dadb01d642e/rows?key=VDUYAE2tjjrmz2gGpUUh5nIVgpAT8JgTajd9a2TdBJ%2FrEpamPm3PnqagSkZsy92CwX36Ew7JNLFPmQGQmhhylg%3D%3D"
+url = "https://api.powerbi.com/beta/271d5e7b-1350-4b96-ab84-52dbda4cf40c/datasets/7822ddc3-6b79-4dd6-bc8b-d020325c743c/rows?key=T87n6eQ%2FwSuzoWoRhYzHrzDCkyUrxtBh1rWRj567bbfRaggrlD7cGjrpJN49NfTdXG62RN91x%2FtcaEzy7Reb6Q%3D%3D"
 
 headers = {
   "Content-Type": "application/json"
@@ -97,6 +97,17 @@ def push_streaming_data(data):
       data=json.dumps(data)
   )
   return response
+
+# parsed = [
+#   {
+#     "date" :"2022-05-19T13:22:25.231Z",
+#     "value" :98.6,
+#     "type" :"AAAAA555555",
+#     "lat" :98.644432423423423432432,
+#     "lng" :98.6444,
+#     "device" :"AAAAA555555"
+#   }
+# ]
 
 print(push_streaming_data(parsed))
 
