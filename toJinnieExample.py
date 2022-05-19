@@ -13,7 +13,7 @@ conn = psycopg2.connect(
 cursor = conn.cursor()
 print('connected to DB !')
 
-# insert puikung(s) to db ------------------
+# --------------------- insert puikung(s) to db ------------------
 
 # for i in range(50):
 
@@ -33,7 +33,7 @@ print('connected to DB !')
 #     conn.commit()
 
 
-# get puikung(s) from db -----------------
+# --------------------- get puikung(s) from db -----------------
 
 queryStr = 'SELECT * FROM raw_data;'
 cursor.execute(queryStr)
@@ -74,6 +74,7 @@ print (df_trimmed.tail())
 
 
 # convert df to json
+# df_trimmed.tail() to the number you wanna post each time (in this test case: 30 rows)
 
 result = df_trimmed.tail(30).to_json(orient="records")
 parsed = json.loads(result)
