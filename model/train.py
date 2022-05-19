@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
 from os.path import exists
 from tensorflow.keras import Sequential, models
 from tensorflow.keras.layers import Dense, LSTM, Dropout
@@ -48,8 +47,24 @@ else:
    
 
 def train_model(X_train, y_train, epochs=1):
-  trained = modelLSTM.fit(X_train, y_train, epochs=epochs, batch_size=32, callbacks=callbacks)
-  return trained
+    earlystopping = EarlyStopping(
+        monitor='loss', 
+        patience=3, 
+        min_delta=0, 
+        mode='auto'
+    )
+
+    reduce_lr = ReduceLROnPlateau(
+        monitor='loss', 
+        factor=0.2,   
+        patience=2, 
+        min_lr=0.001,
+        verbose=0
+    )
+
+    callbacks = [earlystopping, reduce_lr]
+    trained = modelLSTM.fit(X_train, y_train, epochs=epochs, batch_size=32, callbacks=callbacks)
+    return trained
 
 def prep_data_live(df, scaler):
   df = df[['pm25','temp','rh','pm10', 'lat','long']]
