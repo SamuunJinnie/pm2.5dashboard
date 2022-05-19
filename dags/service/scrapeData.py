@@ -78,10 +78,6 @@ def connectDB():
     print('------------- Connect Database -------------')
     conn = psycopg2.connect(database='airflow', user='airflow', password='airflow',host='172.24.0.2')
     cursor = conn.cursor()
-    print('------------- conn -------------')
-    print(conn)
-    print('------------- cursor -------------')
-    print(cursor)
     print('------------- Suscessfully -------------')
     return conn,cursor
 
