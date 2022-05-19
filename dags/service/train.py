@@ -107,7 +107,7 @@ def inputModel():
     conn.commit()
 
     results = cursor.fetchall()
-    columns = ['device', 'lat', 'lng', 'pm25', 'pm10', 'rh', 'temp', 'datetime_aq']
+    columns = ['id','device', 'lat', 'lng', 'pm25', 'pm10', 'rh', 'temp', 'datetime_aq']
     df = pd.DataFrame(results,columns=columns)
     prediction = live_train(df)
     insertDFtoDB(conn,prediction,"predicted_data")
