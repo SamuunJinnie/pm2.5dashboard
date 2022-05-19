@@ -3,6 +3,7 @@ import pandas as pd
 import psycopg2
 import random
 import json
+from datetime import datetime
 
 print('connecting to DB . . .')
 conn = psycopg2.connect(
@@ -15,7 +16,7 @@ print('connected to DB !')
 
 # --------------------- insert puikung(s) to db ------------------
 
-# for i in range(50):
+# for i in range(30):
 
 #     queryStr = 'INSERT INTO raw_data (device,lat,lng,pm25,pm10,rh,temp,traffic,datetime_aq) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);'
 #     device = random.randint(1000000, 1000000000)
@@ -26,7 +27,7 @@ print('connected to DB !')
 #     rh = random.uniform(1, 100)
 #     temp = random.uniform(1, 100)
 #     traffic = random.uniform(1, 10)
-#     datetime_aq = "2022-05-19T13:22:25.231Z"
+#     datetime_aq = datetime.now()
 
 #     data = (device,lat,lng,pm25,pm10,rh,temp,traffic,datetime_aq)
 #     cursor.execute(queryStr, data)
@@ -35,7 +36,7 @@ print('connected to DB !')
 
 # --------------------- get puikung(s) from db -----------------
 
-queryStr = 'SELECT * FROM raw_data;'
+queryStr = 'SELECT * FROM raw_data ORDER BY DESC LIMIT 30;'
 cursor.execute(queryStr)
 conn.commit()
 
@@ -74,9 +75,8 @@ print (df_trimmed.tail())
 
 
 # convert df to json
-# df_trimmed.tail() to the number you wanna post each time (in this test case: 30 rows)
 
-result = df_trimmed.tail(30).to_json(orient="records")
+result = df_trimmed.to_json(orient="records")
 parsed = json.loads(result)
 json.dumps(parsed, indent=4)
 
