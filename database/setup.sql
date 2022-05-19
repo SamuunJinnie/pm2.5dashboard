@@ -1,5 +1,6 @@
 DROP TABLE  IF EXISTS raw_data CASCADE;
 DROP TABLE  IF EXISTS predicted_data CASCADE;
+
 CREATE TABLE IF NOT EXISTS raw_data (
     id serial PRIMARY KEY,
     stationID VARCHAR(10) NOT NULL,
