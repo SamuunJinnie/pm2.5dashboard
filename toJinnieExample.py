@@ -59,7 +59,7 @@ print(df.describe(include='all'))
 
 #trim df ---------------------------------------------
 
-df_trimmed = df.drop(["id", "pm10", "rh", "temp", "traffic"], axis='columns')
+df_trimmed = df.drop([ "pm10", "rh", "temp", "traffic"], axis='columns')
 print(df_trimmed.head())
 
 name_mapper = {

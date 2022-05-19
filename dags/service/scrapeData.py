@@ -45,7 +45,7 @@ def scrapeAllData(stationID,lng,lat,year,month,day,hour,driver,cursor):
     temp = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=temp/equirectangular/loc={lng},{lat}', driver)
     # traffic = scrape_longdo(f'https://traffic.longdo.com/api/json/traffic/index')
     query = "INSERT INTO raw_data (device,lat,lng,pm25,pm10,rh,temp,datetime_aq) VALUES (%s,%s,%s,%s,%s,%s,%s,%s);"
-    data = (stationID,lat,lng,pm25,pm10,rh,temp,traffic,str(time_utc7))
+    data = (stationID,lat,lng,pm25,pm10,rh,temp,str(time_utc7))
     cursor.execute(query, data)
     print('----------------------------------------')
     # return {"datetime_aq": str(time_utc7),'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}
@@ -61,7 +61,7 @@ def scrapeAllStations(datetime):
     service = ChromeService(executable_path=ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service,options = chrome_options)
 
-    df = pd.read_csv('/opt/airflow/dags/device_lat_long.csv')
+    df = pd.read_csv('/opt/airflow/dags/service/device_lat_long.csv')
 
     temp1, temp2 = datetime.split("T")
     year,month,day = temp1.split("-")
