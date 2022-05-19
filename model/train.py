@@ -18,33 +18,14 @@ def init_model():
     modelLSTM.add(LSTM(units = 24, activation = 'relu', input_shape = (24, 6)))
     modelLSTM.add(Dropout(0.5))
     modelLSTM.add(Dense(units = 24))
-
-    earlystopping = EarlyStopping(
-        monitor='loss', 
-        patience=3, 
-        min_delta=0, 
-        mode='auto'
-    )
-
-    reduce_lr = ReduceLROnPlateau(
-        monitor='loss', 
-        factor=0.2,   
-        patience=2, 
-        min_lr=0.001,
-        verbose=0
-    )
-
-    callbacks = [earlystopping, reduce_lr]
-
     optimizer = Adam(learning_rate=0.0005)
-    modelLSTM.compile(optimizer=optimizer, loss = 'mean_squared_error', callbacks=callbacks)
+    modelLSTM.compile(optimizer=optimizer, loss = 'mean_squared_error')
     return modelLSTM
 
 if exists(model_weight_path):
     modelLSTM = models.load_model(model_weight_path)
 else:
     modelLSTM = init_model()
-   
 
 def train_model(X_train, y_train, epochs=1):
     earlystopping = EarlyStopping(
@@ -79,7 +60,7 @@ def prep_data_live(df, scaler):
     outputs.append(output)
   return np.array(inputs), np.array(outputs)
 
-def live_train(data):  
+def live_train(modelLSTM, data):  
     data['datetime'] = pd.to_datetime(data['datetime_aq'], format='%Y-%m-%d %H:%M:%S.%f')
     data = data.sort_values(by='datetime')
     df = pd.DataFrame()
@@ -114,3 +95,4 @@ def live_train(data):
     return to_save_df
 
 
+live_train(modelLSTM)
