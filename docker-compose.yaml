@@ -39,6 +39,16 @@
 # Feel free to modify this file to suit your needs.
 ---
 version: "3"
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.24.0.0/16"
+          gateway: "172.24.0.1"
+
 x-airflow-common: &airflow-common
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
@@ -70,20 +80,22 @@ x-airflow-common: &airflow-common
 
 services:
   postgres:
-    image: postgres:13
-    # build: ./database
+    # image: postgres:13
+    build: ./database
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
-      - ./database/setup.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 5s
       retries: 5
     restart: always
+    networks:
+      default:
+        ipv4_address: 172.24.0.2
 
   redis:
     image: redis:latest
@@ -95,6 +107,9 @@ services:
       timeout: 30s
       retries: 50
     restart: always
+    networks:
+      default:
+        ipv4_address: 172.24.0.3
 
   airflow-webserver:
     <<: *airflow-common
@@ -111,7 +126,9 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
-
+    networks:
+      default:
+        ipv4_address: 172.24.0.8
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
@@ -129,6 +146,9 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      default:
+        ipv4_address: 172.24.0.4
 
   airflow-worker:
     <<: *airflow-common
@@ -150,6 +170,9 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      default:
+        ipv4_address: 172.24.0.5
 
   airflow-triggerer:
     <<: *airflow-common
@@ -168,6 +191,9 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      default:
+        ipv4_address: 172.24.0.6
 
   airflow-init:
     <<: *airflow-common
@@ -275,6 +301,9 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      default:
+        ipv4_address: 172.24.0.7
 
   # selenium:
   #   image: selenium/standalone-chrome

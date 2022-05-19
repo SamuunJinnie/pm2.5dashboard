@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS raw_data (
     co float,
     rh float,
     temp float,
-    -- datetime_aq timestamps with time zone NOT NULL
     datetime_aq VARCHAR(50) NOT NULL
-)
+);
+
+-- datetime_aq timestamps with time zone NOT NULL

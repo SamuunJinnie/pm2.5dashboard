@@ -10,18 +10,8 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import psycopg2
 from datetime import datetime,timezone 
+import pytz
 import os
-
-print('------------- Connect Database -------------')
-conn = psycopg2.connect(database='airflow', user='airflow', password='airflow')
-cursor = conn.cursor()
-print('------------- conn -------------')
-print(conn)
-print('------------- cursor -------------')
-print(cursor)
-print('------------- Suscessfully -------------')
-# service = ChromeService(executable_path=ChromeDriverManager().install())
-# driver = webdriver.Chrome(service=service)
 
 
 def scrape(url, driver):
@@ -42,12 +32,12 @@ def scrape(url, driver):
     data = element.text.split(' ')[0]
     return data
 
-def scrapeAllData(stationID,lng,lat,year,month,day,hour,driver):
+def scrapeAllData(stationID,lng,lat,year,month,day,hour,driver,cursor):
     # url = f'https://earth.nullschool.net/#{year}/{month:02d}/{day:02d}/{hour:02d}00Z/chem/surface/level/overlay=so2smass/equirectangular/loc={lng},{lat}'
     # y,m,d,h : UTC+0 that use for scrape in nullschool
     #PM25 PM10 NO2 SO2 Co O3 + RH TEMP
     time_utc0 = datetime(int(year),int(month),int(day),int(hour), tzinfo=timezone.utc)
-    time_utc7 = time_utc0.replace(tzinfo=timezone.utc).astimezone(tz=None)
+    time_utc7 = time_utc0.replace(tzinfo=timezone.utc).astimezone(tz=pytz.timezone('Asia/Bangkok'))
     pm25 = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/particulates/surface/level/anim=off/overlay=pm2.5/equirectangular/loc={lng},{lat}', driver)
     pm10 =  scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/particulates/surface/level/anim=off/overlay=pm10/equirectangular/loc={lng},{lat}', driver)
     no2 = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/chem/surface/level/anim=off/overlay=no2/equirectangular/loc={lng},{lat}', driver)
@@ -56,16 +46,15 @@ def scrapeAllData(stationID,lng,lat,year,month,day,hour,driver):
     # o3 = scrape()
     rh = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=relative_humidity/equirectangular/loc={lng},{lat}', driver)
     temp = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=temp/equirectangular/loc={lng},{lat}', driver)
-    query = "INSERT INTO raw_data (stationID,lat,lng,pm25,pm10,no2,so2,co,rh,temp,datetime_aq) VALUES (%s, %f, %f, %f, %f,%f,%f,%f,%f,%f,%s);"
+    query = "INSERT INTO raw_data (stationID,lat,lng,pm25,pm10,no2,so2,co,rh,temp,datetime_aq) VALUES (%s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s);"
     data = (stationID,lat,lng,pm25,pm10,no2,so2,co,rh,temp,str(time_utc7))
     cursor.execute(query, data)
     print('----------------------------------------')
-    records = cursor.fetchall()
-    print(records)
     # return {"datetime_aq": str(time_utc7),'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}
     return
 
 def scrapeAllStations(datetime):
+    conn,cursor =connectDB()
     # chromedriver_autoinstaller.install()
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--headless")
@@ -90,7 +79,7 @@ def scrapeAllStations(datetime):
     hour = temp3[0]
     for ind in df.index :
         print("index : ",ind)
-        data = scrapeAllData(df['stationIDs'][ind],df['longs'][ind], df['lats'][ind],year,month,day,hour,driver)
+        data = scrapeAllData(df['stationIDs'][ind],df['longs'][ind], df['lats'][ind],year,month,day,hour,driver,cursor)
         # pm25_col.append(data['pm25'])
         # pm10_col.append(data['pm10'])
         # no2_col.append(data['no2'])
@@ -111,5 +100,14 @@ def scrapeAllStations(datetime):
     driver.quit()
     return
 
-
+def connectDB():
+    print('------------- Connect Database -------------')
+    conn = psycopg2.connect(database='airflow', user='airflow', password='airflow',host='172.24.0.2')
+    cursor = conn.cursor()
+    print('------------- conn -------------')
+    print(conn)
+    print('------------- cursor -------------')
+    print(cursor)
+    print('------------- Suscessfully -------------')
+    return conn,cursor
 

@@ -1,3 +1,5 @@
 FROM postgres:13
 
-COPY setup.sql /docker-entrypoint-initdb.d
+ADD /setup.sql /docker-entrypoint-initdb.d/
+
+RUN service postgresql start
