@@ -1,3 +1,5 @@
+DROP TABLE  IF EXISTS raw_data CASCADE;
+DROP TABLE  IF EXISTS predicted_data CASCADE;
 CREATE TABLE IF NOT EXISTS raw_data (
     id serial PRIMARY KEY,
     stationID VARCHAR(10) NOT NULL,
@@ -10,6 +12,16 @@ CREATE TABLE IF NOT EXISTS raw_data (
     co float,
     rh float,
     temp float,
+    traffic float,
+    datetime_aq VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS predicted_data (
+    id serial PRIMARY KEY,
+    stationID VARCHAR(10) NOT NULL,
+    lat float NOT NULL,
+    lng float NOT NULL,
+    pm25 float,
     datetime_aq VARCHAR(50) NOT NULL
 );
 
