@@ -9,6 +9,8 @@ from selenium.webdriver.support import expected_conditions as EC
 # import chromedriver_autoinstaller
 import time
 import psycopg2
+import requests
+import json
 from datetime import datetime,timezone 
 import pytz
 import os
@@ -32,10 +34,14 @@ def scrape(url, driver):
     data = element.text.split(' ')[0]
     return data
 
+def scrape_longdo(url):
+    response = requests.get(url)
+    return  json.loads(response.text)['index']
+
 def scrapeAllData(stationID,lng,lat,year,month,day,hour,driver,cursor):
     # url = f'https://earth.nullschool.net/#{year}/{month:02d}/{day:02d}/{hour:02d}00Z/chem/surface/level/overlay=so2smass/equirectangular/loc={lng},{lat}'
     # y,m,d,h : UTC+0 that use for scrape in nullschool
-    #PM25 PM10 NO2 SO2 Co O3 + RH TEMP
+    #PM25 PM10 NO2 SO2 Co O3 + RH TEMP Traffic
     time_utc0 = datetime(int(year),int(month),int(day),int(hour), tzinfo=timezone.utc)
     time_utc7 = time_utc0.replace(tzinfo=timezone.utc).astimezone(tz=pytz.timezone('Asia/Bangkok'))
     pm25 = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/particulates/surface/level/anim=off/overlay=pm2.5/equirectangular/loc={lng},{lat}', driver)
@@ -46,8 +52,9 @@ def scrapeAllData(stationID,lng,lat,year,month,day,hour,driver,cursor):
     # o3 = scrape()
     rh = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=relative_humidity/equirectangular/loc={lng},{lat}', driver)
     temp = scrape(f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/wind/surface/level/anim=off/overlay=temp/equirectangular/loc={lng},{lat}', driver)
-    query = "INSERT INTO raw_data (stationID,lat,lng,pm25,pm10,no2,so2,co,rh,temp,datetime_aq) VALUES (%s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s);"
-    data = (stationID,lat,lng,pm25,pm10,no2,so2,co,rh,temp,str(time_utc7))
+    traffic = scrape_longdo(f'https://traffic.longdo.com/api/json/traffic/index')
+    query = "INSERT INTO raw_data (stationID,lat,lng,pm25,pm10,no2,so2,co,rh,temp,traffic,datetime_aq) VALUES (%s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s,%s);"
+    data = (stationID,lat,lng,pm25,pm10,no2,so2,co,rh,temp,traffic,str(time_utc7))
     cursor.execute(query, data)
     print('----------------------------------------')
     # return {"datetime_aq": str(time_utc7),'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}
