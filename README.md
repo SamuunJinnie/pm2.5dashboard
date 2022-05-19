@@ -2,15 +2,15 @@
 
 ## Manual
 
-### Step 0.) 
+### Step 0.)
 
 Clear docker volume and images **(if needed)**
 
-Clear Docker volume *Be aware that your **every volume** will be gone*
+Clear Docker volume _Be aware that your **every volume** will be gone_
 
 `docker volume rm $(docker volume ls -q)`
 
-Clear Docker images *Be aware that your **every images** will be deleted*
+Clear Docker images _Be aware that your **every images** will be deleted_
 
 `docker rmi -f $(docker images -aq)`
 
@@ -22,10 +22,10 @@ Build postgres image with initial command in **setup.ql**
 
 ### Step 2.)
 
-Build other every images and run
+Build other every images and run (About 15 minutes for the first time)
 
 `docker-compose up -d`
 
 ### Step 3.)
 
-***Pray***
+**_Pray_**

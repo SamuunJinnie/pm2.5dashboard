@@ -17,18 +17,18 @@ print('connected to DB !')
 
 # --------------------- insert mock data to db ------------------
 
-for i in range(30):
+# for i in range(30):
 
-    queryStr = 'INSERT INTO predicted_data (device,lat,lng,pm25,datetime_aq) VALUES (%s, %s, %s, %s, %s);'
-    device = random.randint(1000000, 1000000000)
-    lat = random.uniform(1, 100)
-    lng = random.uniform(1, 100)
-    pm25 = random.uniform(1, 100)
-    datetime_aq = datetime.now()
+#     queryStr = 'INSERT INTO predicted_data (device,lat,lng,pm25,datetime_aq) VALUES (%s, %s, %s, %s, %s);'
+#     device = random.randint(1000000, 1000000000)
+#     lat = random.uniform(1, 100)
+#     lng = random.uniform(1, 100)
+#     pm25 = random.uniform(1, 100)
+#     datetime_aq = datetime.now()
 
-    data = (device,lat,lng,pm25,datetime_aq)
-    cursor.execute(queryStr, data)
-    conn.commit()
+#     data = (device,lat,lng,pm25,datetime_aq)
+#     cursor.execute(queryStr, data)
+#     conn.commit()
 
 # --------------------- get 30 last puikung(s) from db -----------------
 
@@ -48,7 +48,7 @@ print('------------------------------ done Query ! -----------------------------
 # ---------------------- convert data into df --------------------------
 
 df = pd.DataFrame(results, columns=['id', 'device', 'lat', 'lng', 'value', 'date'])
-df = df.drop(['id'], axis='columns')
+# df = df.drop(['id'], axis='columns')
 df['type'] = 'predicted'
 
 print("------------ this is final df --------------")
