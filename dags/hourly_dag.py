@@ -17,10 +17,10 @@ with DAG('hourly_dag',default_args={'retries': 5,'retry_delay': timedelta(second
 ,start_date= datetime(2022, 5, 13,17),catchup = True,max_active_runs=5) as dag:
 
     scrapeDag = PythonOperator(task_id='scrapeAllStations', python_callable=scrapeAllStations,op_args=["{{ dag_run.logical_date | ts }}"])
-    dummyScrape = DummyOperator(task_id='Success_Scrape')
-    dummySend = DummyOperator(task_id='Success_Send_Current')
+    delayDummy = BashOperator(task_id="dummy_delay_1",bash_command="sleep 30s")
     sendCurrentPM = PythonOperator(task_id='sendCurrentPM', python_callable=sendToBI('history'))
-    scrapeDag >> dummyScrape >> sendCurrentPM >> dummySend
+    success = DummyOperator(task_id="success")
+    scrapeDag >> delayDummy  >> sendCurrentPM >> success
     print("--------------- Success scrape ----------------")
     print(scrapeDag.output)
     print("-----------------------------------------------")
