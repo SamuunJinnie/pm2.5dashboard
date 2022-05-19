@@ -12,8 +12,6 @@ from datetime import datetime
 import os
 import json
 
-token = 'eyJhbGciOiJIUzI1NiJ9.ZTA5NjI0NDAtZDc1OS0xMWVjLWE0MjgtY2Q0ZDBjOTBkYTA0.xF5qH6G42dGkBylhC5QqsvByD6iOhPNBSTmWW-f3NA8'
-
 service = ChromeService(executable_path=ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service)
 
@@ -41,7 +39,7 @@ def scrape_longdo(url):
     return  json.loads(response.text)['index']
 
 def scrapeAllData(lng,lat):
-    #PM25 PM10 NO2 SO2 Co O3 + RH TEMP
+    #PM25 PM10 NO2 SO2 Co O3 + RH TEMP Traffic
     pm25 = scrape(f'https://earth.nullschool.net/#current/particulates/surface/level/anim=off/overlay=pm2.5/equirectangular/loc={lng},{lat}')
     pm10 =  scrape(f'https://earth.nullschool.net/#current/particulates/surface/level/anim=off/overlay=pm10/equirectangular/loc={lng},{lat}')
     no2 = scrape(f'https://earth.nullschool.net/#current/chem/surface/level/anim=off/overlay=no2/equirectangular/loc={lng},{lat}')
