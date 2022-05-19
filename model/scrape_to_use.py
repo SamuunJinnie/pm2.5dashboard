@@ -13,21 +13,24 @@ def scrape(url):
     # url = f'https://earth.nullschool.net/chem/surface/level/anim=off/overlay=so2smass/equirectangular/loc={lng},{lat}'
     #go to web/#current
     driver.get(url=url)
-    element = WebDriverWait(driver,9999).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="spotlight-panel"]/div[3]/div')))
-    data_status = driver.find_element(By.XPATH,'/html/body/main/div[3]/div[1]/div')
-    if data_status.text=="Downloading...":
-        while True:
-            time.sleep(0.05)
-            data_status = driver.find_element(By.XPATH,'/html/body/main/div[3]/div[1]/div')
-            if data_status.text=="Downloading...":
-                continue
-            else :
-                break
-    if data_status.text=="Data download failed":
+    try:
+        element = WebDriverWait(driver,5).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="spotlight-panel"]/div[3]/div')))
+        data_status = driver.find_element(By.XPATH,'/html/body/main/div[3]/div[1]/div')
+        if data_status.text=="Downloading...":
+            while True:
+                time.sleep(0.05)
+                data_status = driver.find_element(By.XPATH,'/html/body/main/div[3]/div[1]/div')
+                if data_status.text=="Downloading...":
+                    continue
+                else :
+                    break
+        if data_status.text=="Data download failed":
+            return np.NaN
+        #so2
+        data = element.text.split(' ')[0]
+        return data
+    except:
         return np.NaN
-    #so2
-    data = element.text.split(' ')[0]
-    return data
 
 from os import makedirs
 from os.path import join
@@ -57,6 +60,8 @@ for i in range(start, stop):
         month = datetime_utc.month
         day = datetime_utc.day
         hour = datetime_utc.hour
+        if year < 2013:
+            continue
         urls = {
             'PM25':f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/particulates/surface/level/anim=off/overlay=pm2.5/equirectangular/loc={lng},{lat}',
             'PM10':f'https://earth.nullschool.net/#{year}/{month}/{day}/{hour}00Z/particulates/surface/level/anim=off/overlay=pm10/equirectangular/loc={lng},{lat}',

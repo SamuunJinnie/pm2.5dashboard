@@ -35,31 +35,38 @@ if not exists(old_station_path_path):
     old_station_paths_df.to_csv(old_station_path_path)
 
 
-makedirs('prepared_data/stations', exist_ok=True)
 to_use_base_path = 'prepared_data/to_uses'
 makedirs(to_use_base_path, exist_ok=True)
 
-prepared_data_each_station_path = 'prepared_data/stations/'
+prepared_data_each_station_path = 'prepared_data/onlynew_stations/'
+makedirs(prepared_data_each_station_path, exist_ok=True)
+
+new_to_use_base_path = 'prepared_data/onlynew_new_to_uses'
+makedirs(new_to_use_base_path, exist_ok=True)
 i = 0
 for station in new_df['stationID'].unique():
     cur_station_path = join(prepared_data_each_station_path, f'{station}.csv')
-    try:
-        if not exists(cur_station_path):
-            df = prepare_new_station_data(station)
-            to_use = prep_3_day_iov(df.index, i)
-            if station in old_station_paths:
-                old_df = prepare_old_station_data(station)
-                df = pd.concat([old_df, df]).reset_index().rename(columns={'index':'datetime'}).drop_duplicates(subset=['datetime']).set_index('datetime')
-                old_to_use = prep_3_day_iov(old_df.index, i)
-                to_use = pd.concat([to_use.iloc[:480], old_to_use.iloc[-480:]])
-            else:
-                df.reset_index(inplace=True)
-                df.rename(columns={'datetime_aq':'datetime'}, inplace=True)
-                df.set_index('datetime', inplace=True)
-            to_use.to_csv(join(to_use_base_path, f'{station}.csv'))
-            df.to_csv(cur_station_path)
-            print(i, ':', station, ': complete')
-            i += 1
-    except:
-        print(station, ': failed')
-        break
+    new_cur_to_use_path = join(new_to_use_base_path, f'{station}.csv')
+    # try:
+    if (not exists(cur_station_path)) or not exists(new_cur_to_use_path):
+        df = prepare_new_station_data(station)
+        to_use = prep_3_day_iov(df.index, i)
+        # if station in old_station_paths:
+        #     old_df = prepare_old_station_data(station)
+        #     df = pd.concat([old_df, df]).reset_index().rename(columns={'index':'datetime'}).drop_duplicates(subset=['datetime']).set_index('datetime')
+        #     old_to_use = prep_3_day_iov(old_df.index, i)
+        #     to_use = pd.concat([to_use.iloc[:960], old_to_use.iloc[-960:]])
+        # else:
+        df.reset_index(inplace=True)
+        df.rename(columns={'datetime_aq':'datetime'}, inplace=True)
+        df.set_index('datetime', inplace=True)
+        to_use.to_csv(join(new_to_use_base_path, f'{station}.csv'))
+        df.to_csv(cur_station_path)
+        print(i, ':', station, ': complete')
+        i += 1
+    # except:
+        # print(station, ': failed')
+        # break
+
+model_weight_path = 'model_weight'
+makedirs(model_weight_path, exist_ok=True)
