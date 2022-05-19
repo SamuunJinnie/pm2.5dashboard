@@ -6,12 +6,13 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-
+import requests
 import time
 from datetime import datetime 
 import os
+import json
 
-
+token = 'eyJhbGciOiJIUzI1NiJ9.ZTA5NjI0NDAtZDc1OS0xMWVjLWE0MjgtY2Q0ZDBjOTBkYTA0.xF5qH6G42dGkBylhC5QqsvByD6iOhPNBSTmWW-f3NA8'
 
 service = ChromeService(executable_path=ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service)
@@ -35,6 +36,10 @@ def scrape(url):
     data = element.text.split(' ')[0]
     return data
 
+def scrape_longdo(url):
+    response = requests.get(url)
+    return  json.loads(response.text)['index']
+
 def scrapeAllData(lng,lat):
     #PM25 PM10 NO2 SO2 Co O3 + RH TEMP
     pm25 = scrape(f'https://earth.nullschool.net/#current/particulates/surface/level/anim=off/overlay=pm2.5/equirectangular/loc={lng},{lat}')
@@ -45,8 +50,7 @@ def scrapeAllData(lng,lat):
     # o3 = scrape()
     rh = scrape(f'https://earth.nullschool.net/#current/wind/surface/level/anim=off/overlay=relative_humidity/equirectangular/loc={lng},{lat}')
     temp = scrape(f'https://earth.nullschool.net/#current/wind/surface/level/anim=off/overlay=temp/equirectangular/loc={lng},{lat}')
-    return {"datetime_aq": str(datetime.now()),"data":{'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp}}
+    traffic = scrape_longdo(f'https://traffic.longdo.com/api/json/traffic/index')
+    return {"datetime_aq": str(datetime.now()),"data":{'pm25':pm25,'pm10':pm10,'no2':no2,'co':co,'so2':so2,'rh':rh,'temp':temp,'traffic':traffic}}
 
-# print(scrapeAllData(100.141,14.898))
-    
-def scrapeAllStation():
+print(scrapeAllData(100.141,14.898))
