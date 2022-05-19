@@ -63,8 +63,8 @@ def prep_data_live(df, scaler):
   return np.array(inputs), np.array(outputs)
 
 def live_train(modelLSTM, data):  
-    data['datetime'] = pd.to_datetime(data['datetime_aq'], format='%Y-%m-%d %H:%M:%S.%f')
-    data = data.sort_values(by='datetime')
+    data['datetime_aq'] = pd.to_datetime(data['datetime_aq'], format='%Y-%m-%d %H:%M:%S.%f')
+    data = data.sort_values(by='datetime_aq')
     df = pd.DataFrame()
     devices = []
     for device in data['device'].unique():
@@ -80,7 +80,7 @@ def live_train(modelLSTM, data):
     train_model(inputs, outputs)
     y_pred = modelLSTM.predict(outputs)
 
-    cur_date = data['datetime'].iloc[-1]
+    cur_date = data['datetime_aq'].iloc[-1]
     hours = []
     for i in range(72):
         cur_date += datetime.timedelta(hours=1)
@@ -90,7 +90,7 @@ def live_train(modelLSTM, data):
     for i in range(len(devices)):
         cur_data = data[data['device'] == devices[i]]
         cur_pred = y_pred[i].tolist()
-        cur_data['datetime'] = hours
+        cur_data['datetime_aq'] = hours
         cur_data['pm25'] = cur_pred
         to_save_df = pd.concat([to_save_df, cur_data])
 
