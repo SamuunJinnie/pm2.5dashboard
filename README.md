@@ -1,5 +1,8 @@
 # PM 2.5 Dashboard by Samun Jiratchaya
 
+### Note: Not compatible with M1 chips krub ajarn TT
+### (Reccommend : Windows)
+
 ## Manual
 
 ### Step 0.)
