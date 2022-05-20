@@ -1,7 +1,7 @@
 # PM 2.5 Dashboard by Samun Jiratchaya
 
-### Note: Not compatible with M1 chips krub ajarn TT
-### (Reccommend : Windows or Mac with intel chips)
+### Note: Not compatible with M1 chip krub ajarn TT
+### (Reccommend : Windows or Mac with intel chip)
 
 ## Manual
 
