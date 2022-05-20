@@ -6,11 +6,11 @@
 
 #### Clear docker volume and images *(if needed)*
 
-Clear Docker volume _Be aware that your **every volume** will be gone_
+Clear Docker volume *Be aware that your **every volume** will be gone*
 
 `docker volume rm $(docker volume ls -q)`
 
-Clear Docker images _Be aware that your **every images** will be deleted_
+Clear Docker images *Be aware that your **every images** will be deleted*
 
 `docker rmi -f $(docker images -aq)`
 
