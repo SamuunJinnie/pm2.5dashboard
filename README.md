@@ -4,7 +4,7 @@
 
 ### Step 0.)
 
-Clear docker volume and images **(if needed)**
+#### Clear docker volume and images *(if needed)*
 
 Clear Docker volume _Be aware that your **every volume** will be gone_
 
@@ -32,7 +32,7 @@ now you should be able to access airflow UI via `http://localhost:8080`
 
 ### Step 3.)
 
-log in to airflow with username : `airflow` and password : `airflow`
+Log in to airflow with username : `airflow` and password : `airflow`
 
 now you should be able to see DAGs available in the system
 
@@ -52,7 +52,7 @@ After that the data will be saved in the database (table: `predicted_data`)
 
 Next, the data will be sent to PowerBI report.
 
-**Cautions! To start this step, you need atleast 6 successive days data from the previous step.**
+**Cautions! To execute this step, you need atleast 6 successive days data from the previous step.**
 
 ### Step 6.)
 
