@@ -65,10 +65,12 @@ def prep_data_live(df, scaler):
 def live_train(data):
     model_weight_path = '/opt/airflow/dags/service/best_weight.h5'
     scaler_weight_path = '/opt/airflow/dags/service/scaler.gz' 
-    if exists(model_weight_path):
-        modelLSTM = models.load_model(model_weight_path)
-    else:
-        modelLSTM = init_model()
+    # if exists(model_weight_path):
+    print('----load model_weight---------------')
+    modelLSTM = models.load_model(model_weight_path)
+    # else:
+    #     modelLSTM = init_model()
+    print(modelLSTM.get_weights()[0])
     data['datetime_aq'] = pd.to_datetime(data['datetime_aq'], format='%Y-%m-%d %H:%M:%S.%f')
     data = data.sort_values(by='datetime_aq')
     df = pd.DataFrame()
@@ -78,7 +80,9 @@ def live_train(data):
         df = pd.concat([df, temp])
         devices.append(device)
     if exists(scaler_weight_path):
+        print('----load scaler')
         scaler = joblib.load(scaler_weight_path)
+        print('----load scaler')
     else:
         scaler = MinMaxScaler()
         scaler.fit(df.drop(['Unnamed: 0', 'id', 'device', 'datetime_aq'],errors='ignore'))

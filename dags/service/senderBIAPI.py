@@ -20,7 +20,7 @@ def sendToBI(typeS):
 
   elif typeS == 'predicted':
     #**********************************************************
-    queryStr = 'SELECT * FROM predicted_data ORDER BY id DESC LIMIT 24552;'
+    queryStr = 'SELECT * FROM predicted_data ORDER BY id DESC LIMIT 8184;'
     columns = ['id', 'device', 'lat', 'lng', 'value', 'date']
 
   cursor.execute(queryStr)
