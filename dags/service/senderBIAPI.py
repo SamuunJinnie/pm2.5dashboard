@@ -45,6 +45,16 @@ def sendToBI(typeS):
     }
     df.rename(columns=name_mapper,inplace=True)
 
+  # ------------------- start adding device name -------------------
+  df_with_device_name = pd.read_csv('/opt/airflow/dags/service/ID_INFO_SFA.csv')
+  df_with_device_name = df_with_device_name.rename({'device_id': 'device'}, axis='columns')
+
+  # left join and change "name_en" ---> "device"
+  df = pd.merge(df,df_with_device_name[['device', 'name_en']],on='device',how='left')
+  df = df.drop('device', axis='columns')
+  df = df.rename({'name_en': 'device'}, axis='columns')
+
+
   result = df.to_json(orient="records")
   parsed = json.loads(result)
   json.dumps(parsed, indent=4)
