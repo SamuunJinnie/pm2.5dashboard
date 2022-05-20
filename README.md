@@ -56,6 +56,8 @@ Next, the data will be sent to PowerBI report.
 
 ### Step 6.)
 
-Open the provided PowerBI report and enjoy!
+Open the provided PowerBI report and enjoy! :joy:
 
-Power BI: `https://app.powerbi.com/groups/me/reports/737dc4e4-a1eb-417e-9533-0fd073b385ca?ctid=271d5e7b-1350-4b96-ab84-52dbda4cf40c&pbi_source=linkShare`
+[Link to PowerBI report](https://app.powerbi.com/groups/me/reports/737dc4e4-a1eb-417e-9533-0fd073b385ca?ctid=271d5e7b-1350-4b96-ab84-52dbda4cf40c&pbi_source=linkShare)
+
+**ps. We use PowerBI report instead of dashboard since the dashboard is not responsive. :cry:**
