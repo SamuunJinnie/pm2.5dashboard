@@ -38,9 +38,9 @@ now you should be able to see DAGs available in the system
 
 ### Step 4.)
 
-Trigger `hourly_dag` to start scraping data and save the data to the database (table: `raw_data`)
+Trigger `hourly_dag` to start scraping data and save the data to the database (table: **raw_data**)
 
-**Cautions! Default start date of DAG is set to `14-05-2022 00.00 UTC+7`**
+**Cautions! Default start date of DAG is set to <ins>14-05-2022 00.00 UTC+7</ins>**
 
 **To change this, go to `daily_dag.py` and change `start date` argument with UTC timezone.**
 
@@ -48,7 +48,7 @@ Trigger `hourly_dag` to start scraping data and save the data to the database (t
 
 Trigger `daily_dag` to feed the data to a model and start training the model.
 
-After that the data will be saved in the database (table: `predicted_data`)
+After that the data will be saved in the database (table: **predicted_data**)
 
 Next, the data will be sent to PowerBI report.
 
