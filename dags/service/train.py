@@ -9,6 +9,8 @@ from tensorflow.keras.optimizers import Adam
 import pandas as pd
 import datetime
 import joblib
+import psycopg2
+import psycopg2.extras as extras
 
 # model_weight_path = '/opt/airflow/dags/service/best_weight.h5'
 # scaler_weight_path = '/opt/airflow/dags/service/scaler.gz'
@@ -60,10 +62,9 @@ def prep_data_live(df, scaler):
     outputs.append(output)
   return np.array(inputs), np.array(outputs)
 
-def live_train(path):
-    data = pd.reaf_csv(path)
-    model_weight_path = 'best_weight.h5'
-    scaler_weight_path = 'scaler.gz' 
+def live_train(data):
+    model_weight_path = '/opt/airflow/dags/service/best_weight.h5'
+    scaler_weight_path = '/opt/airflow/dags/service/scaler.gz' 
     if exists(model_weight_path):
         modelLSTM = models.load_model(model_weight_path)
     else:
@@ -108,4 +109,40 @@ def live_train(path):
     return to_save_df
 
 
-live_train(input('filepath:'))
+# live_train(modelLSTM)
+
+def inputModel():
+    conn = psycopg2.connect(database='airflow', user='airflow', password='airflow',host='172.24.0.2')
+    cursor = conn.cursor()
+    query = 'SELECT * FROM raw_data ORDER BY id DESC LIMIT 49104;'
+    cursor.execute(query)
+    conn.commit()
+
+    results = cursor.fetchall()
+    columns = ['id','device', 'lat', 'lng', 'pm25', 'pm10', 'rh', 'temp', 'datetime_aq']
+    df = pd.DataFrame(results,columns=columns)
+    prediction = live_train(df)
+    print("-------------------------------------------")
+    print(prediction.shape)
+    insertDFtoDB(conn,prediction,"predicted_data")
+    conn.close()
+
+
+
+# print(df.to_sql('test2',con=conn,if_exists='append',index=True))
+def insertDFtoDB(conn, df, table):
+    tuples = [tuple(x) for x in df.to_numpy()]
+    cols = ','.join(list(df.columns))
+    # SQL query to execute
+    query = "INSERT INTO %s(%s) VALUES %%s" % (table, cols)
+    cursor = conn.cursor()
+    try:
+        extras.execute_values(cursor, query, tuples)
+        conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error: %s" % error)
+        conn.rollback()
+        cursor.close()
+        return 1
+    print("the dataframe is inserted")
+    cursor.close()

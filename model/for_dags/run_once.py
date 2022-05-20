@@ -6,8 +6,6 @@ import warnings
 import pickle
 warnings.filterwarnings("ignore")
 
-# version dependencies of pickle
-
 def train_and_save():
     traffic_2018 = pd.read_csv('../basedata/Traffics/trafficindex2018.csv')
     traffic_2018['datetime'] = pd.to_datetime(traffic_2018['datetime'] + ' +07:00', format='%Y-%m-%dT%H:%M %z')
