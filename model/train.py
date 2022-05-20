@@ -10,8 +10,8 @@ import pandas as pd
 import datetime
 import joblib
 
-model_weight_path = 'best_weight.h5'
-scaler_weight_path = 'scaler.gz'
+# model_weight_path = '/opt/airflow/dags/service/best_weight.h5'
+# scaler_weight_path = '/opt/airflow/dags/service/scaler.gz'
 
 def init_model():
     modelLSTM = Sequential()
@@ -22,12 +22,12 @@ def init_model():
     modelLSTM.compile(optimizer=optimizer, loss = 'mean_squared_error')
     return modelLSTM
 
-if exists(model_weight_path):
-    modelLSTM = models.load_model(model_weight_path)
-else:
-    modelLSTM = init_model()
+# if exists(model_weight_path):
+#     modelLSTM = models.load_model(model_weight_path)
+# else:
+#     modelLSTM = init_model()
 
-def train_model(X_train, y_train, epochs=1):
+def train_model(X_train, y_train,modelLSTM, epochs=1):
     earlystopping = EarlyStopping(
         monitor='loss', 
         patience=3, 
@@ -48,21 +48,30 @@ def train_model(X_train, y_train, epochs=1):
     return trained
 
 def prep_data_live(df, scaler):
-  df = df[['pm25','temp','rh','pm10', 'lat','long']]
+  df = df[['pm25','temp','rh','pm10', 'lat','lng']]
   arr = scaler.transform(df)
   inputs = []
   outputs = []
-  for i in range(len(arr)//48):
-    iov = arr[i*48:i*48+48]
-    input = iov[:24]
-    output = iov[24:]
+  for i in range(len(arr)//144):
+    iov = arr[i*144:i*144+144]
+    input = iov[:72]
+    output = iov[72:]
     inputs.append(input)
     outputs.append(output)
   return np.array(inputs), np.array(outputs)
 
-def live_train(modelLSTM, data):  
-    data['datetime'] = pd.to_datetime(data['datetime_aq'], format='%Y-%m-%d %H:%M:%S.%f')
-    data = data.sort_values(by='datetime')
+def live_train(path):
+    data = pd.read_csv(path0)
+    model_weight_path = 'best_weight.h5'
+    scaler_weight_path = 'scaler.gz' 
+    # if exists(model_weight_path):
+    print('----load model_weight---------------')
+    modelLSTM = models.load_model(model_weight_path)
+    # else:
+    #     modelLSTM = init_model()
+    print(modelLSTM.get_weights()[0])
+    data['datetime_aq'] = pd.to_datetime(data['datetime_aq'], format='%Y-%m-%d %H:%M:%S.%f')
+    data = data.sort_values(by='datetime_aq')
     df = pd.DataFrame()
     devices = []
     for device in data['device'].unique():
@@ -70,15 +79,22 @@ def live_train(modelLSTM, data):
         df = pd.concat([df, temp])
         devices.append(device)
     if exists(scaler_weight_path):
+        print('----load scaler')
         scaler = joblib.load(scaler_weight_path)
+        print(scaler.scale_)
+        print('----load scaler')
     else:
         scaler = MinMaxScaler()
-        scaler.fit(df)
+        scaler.fit(df.drop(['Unnamed: 0', 'id', 'device', 'datetime_aq'],errors='ignore'))
     inputs, outputs = prep_data_live(df, scaler)
-    train_model(inputs, outputs)
+    print('------------------------------')
+    print('input', inputs.shape)
+    print('output', outputs.shape)
+    train_model(inputs, outputs[:, :, 0],modelLSTM)
+    modelLSTM.save(model_weight_path)
     y_pred = modelLSTM.predict(outputs)
 
-    cur_date = data['datetime'].iloc[-1]
+    cur_date = data['datetime_aq'].iloc[-1]
     hours = []
     for i in range(72):
         cur_date += datetime.timedelta(hours=1)
@@ -86,13 +102,15 @@ def live_train(modelLSTM, data):
 
     to_save_df = pd.DataFrame()
     for i in range(len(devices)):
-        cur_data = data[data['device'] == devices[i]]
+        cur_data = data[data['device'] == devices[i]][:72]
         cur_pred = y_pred[i].tolist()
-        cur_data['datetime'] = hours
+        cur_data['datetime_aq'] = hours
         cur_data['pm25'] = cur_pred
         to_save_df = pd.concat([to_save_df, cur_data])
-
+    print(to_save_df.columns)
+    scale = 1/scaler.scale_[0]
+    to_save_df['pm25'] = to_save_df['pm25'] * scale
+    to_save_df = to_save_df[['device', 'lat', 'lng', 'pm25', 'datetime_aq']][::3]
     return to_save_df
 
-
-live_train(modelLSTM)
+live_train(input('data path : '))
