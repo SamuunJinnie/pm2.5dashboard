@@ -92,6 +92,7 @@ def live_train(data):
     print('input', inputs.shape)
     print('output', outputs.shape)
     train_model(inputs, outputs[:, :, 0],modelLSTM)
+    modelLSTM.save(model_weight_path)
     y_pred = modelLSTM.predict(outputs)
 
     cur_date = data['datetime_aq'].iloc[-1]
