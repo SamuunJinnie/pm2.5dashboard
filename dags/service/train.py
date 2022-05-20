@@ -12,8 +12,8 @@ import joblib
 import psycopg2
 import psycopg2.extras as extras
 
-model_weight_path = 'best_weight.h5'
-scaler_weight_path = 'scaler.gz'
+# model_weight_path = '/opt/airflow/dags/service/best_weight.h5'
+# scaler_weight_path = '/opt/airflow/dags/service/scaler.gz'
 
 def init_model():
     modelLSTM = Sequential()
@@ -24,12 +24,12 @@ def init_model():
     modelLSTM.compile(optimizer=optimizer, loss = 'mean_squared_error')
     return modelLSTM
 
-if exists(model_weight_path):
-    modelLSTM = models.load_model(model_weight_path)
-else:
-    modelLSTM = init_model()
+# if exists(model_weight_path):
+#     modelLSTM = models.load_model(model_weight_path)
+# else:
+#     modelLSTM = init_model()
 
-def train_model(X_train, y_train, epochs=1):
+def train_model(X_train, y_train,modelLSTM, epochs=1):
     earlystopping = EarlyStopping(
         monitor='loss', 
         patience=3, 
@@ -62,7 +62,13 @@ def prep_data_live(df, scaler):
     outputs.append(output)
   return np.array(inputs), np.array(outputs)
 
-def live_train(data):  
+def live_train(data):
+    model_weight_path = '/opt/airflow/dags/service/best_weight.h5'
+    scaler_weight_path = '/opt/airflow/dags/service/scaler.gz' 
+    if exists(model_weight_path):
+        modelLSTM = models.load_model(model_weight_path)
+    else:
+        modelLSTM = init_model()
     data['datetime_aq'] = pd.to_datetime(data['datetime_aq'], format='%Y-%m-%d %H:%M:%S.%f')
     data = data.sort_values(by='datetime_aq')
     df = pd.DataFrame()
@@ -75,9 +81,12 @@ def live_train(data):
         scaler = joblib.load(scaler_weight_path)
     else:
         scaler = MinMaxScaler()
-        scaler.fit(df.drop(['Unnamed: 0', 'id', 'device', 'datetime_aq']))
+        scaler.fit(df.drop(['Unnamed: 0', 'id', 'device', 'datetime_aq'],errors='ignore'))
     inputs, outputs = prep_data_live(df, scaler)
-    train_model(inputs, outputs[:, :, 0])
+    print('------------------------------')
+    print('input', inputs.shape)
+    print('output', outputs.shape)
+    train_model(inputs, outputs[:, :, 0],modelLSTM)
     y_pred = modelLSTM.predict(outputs)
 
     cur_date = data['datetime_aq'].iloc[-1]
@@ -93,7 +102,8 @@ def live_train(data):
         cur_data['datetime_aq'] = hours
         cur_data['pm25'] = cur_pred
         to_save_df = pd.concat([to_save_df, cur_data])
-
+    print(to_save_df.columns)
+    to_save_df = to_save_df[['id', 'device', 'lat', 'lng', 'pm25', 'datetime_aq']][::3]
     return to_save_df
 
 
@@ -110,6 +120,8 @@ def inputModel():
     columns = ['id','device', 'lat', 'lng', 'pm25', 'pm10', 'rh', 'temp', 'datetime_aq']
     df = pd.DataFrame(results,columns=columns)
     prediction = live_train(df)
+    print("-------------------------------------------")
+    print(prediction.shape)
     insertDFtoDB(conn,prediction,"predicted_data")
     conn.close()
 
