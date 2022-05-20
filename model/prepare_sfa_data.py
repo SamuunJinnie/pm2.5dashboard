@@ -3,24 +3,24 @@ import pandas as pd
 from os import makedirs
 from os.path import join
 
-# sfa = pd.read_csv('../basedata/SFA Data /ID_DATA_SFA.csv')[['device_id', 'time_aq', 'temp', 'humid', 'pm25_corrected', 'pm10_corrected']]
-# sf = sfa[sfa.isna().sum(axis=1) == 0]
-# dt_col = pd.to_datetime(sfa['time_aq']+' +0700', format='%Y-%m-%d %H:%M:%S.%f %z').copy()
-# sfa['datetime'] = dt_col.dt.round('H')
+sfa = pd.read_csv('../basedata/SFA Data /ID_DATA_SFA.csv')[['device_id', 'time_aq', 'temp', 'humid', 'pm25_corrected', 'pm10_corrected']]
+sf = sfa[sfa.isna().sum(axis=1) == 0]
+dt_col = pd.to_datetime(sfa['time_aq']+' +0700', format='%Y-%m-%d %H:%M:%S.%f %z').copy()
+sfa['datetime'] = dt_col.dt.round('H')
 
 sfa_station_base_path = 'prepared_data/sfa_devices'
-# makedirs(sfa_station_base_path)
-# i = 0
-# for device in sfa['device_id'].unique():
-#     fn = f'{device}.csv'
-#     if not exists(join(sfa_station_base_path, fn)):
-#         cur = sfa[sfa['device_id'] == device].groupby('datetime').mean()
-#         count = len(cur)
-        # if count >= 216:
-#             # 6 day up
-#             cur.to_csv(join(sfa_station_base_path, fn))
-#             print(i, ':', fn)
-#     i += 1
+makedirs(sfa_station_base_path)
+i = 0
+for device in sfa['device_id'].unique():
+    fn = f'{device}.csv'
+    if not exists(join(sfa_station_base_path, fn)):
+        cur = sfa[sfa['device_id'] == device].groupby('datetime').mean()
+        count = len(cur)
+        if count >= 216:
+            # 6 day up
+            cur.to_csv(join(sfa_station_base_path, fn))
+            print(i, ':', fn)
+    i += 1
 
 
 sfa_info = pd.read_csv('../basedata/SFA Data /ID_INFO_SFA.csv')
