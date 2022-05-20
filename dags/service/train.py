@@ -50,19 +50,19 @@ def train_model(X_train, y_train, epochs=1):
     return trained
 
 def prep_data_live(df, scaler):
-  df = df[['pm25','temp','rh','pm10', 'lat','long']]
+  df = df[['pm25','temp','rh','pm10', 'lat','lng']]
   arr = scaler.transform(df)
   inputs = []
   outputs = []
-  for i in range(len(arr)//48):
-    iov = arr[i*48:i*48+48]
-    input = iov[:24]
-    output = iov[24:]
+  for i in range(len(arr)//144):
+    iov = arr[i*144:i*144+144]
+    input = iov[:72]
+    output = iov[72:]
     inputs.append(input)
     outputs.append(output)
   return np.array(inputs), np.array(outputs)
 
-def live_train(modelLSTM, data):  
+def live_train(data):  
     data['datetime_aq'] = pd.to_datetime(data['datetime_aq'], format='%Y-%m-%d %H:%M:%S.%f')
     data = data.sort_values(by='datetime_aq')
     df = pd.DataFrame()
@@ -75,9 +75,9 @@ def live_train(modelLSTM, data):
         scaler = joblib.load(scaler_weight_path)
     else:
         scaler = MinMaxScaler()
-        scaler.fit(df)
+        scaler.fit(df.drop(['Unnamed: 0', 'id', 'device', 'datetime_aq']))
     inputs, outputs = prep_data_live(df, scaler)
-    train_model(inputs, outputs)
+    train_model(inputs, outputs[:, :, 0])
     y_pred = modelLSTM.predict(outputs)
 
     cur_date = data['datetime_aq'].iloc[-1]
@@ -88,7 +88,7 @@ def live_train(modelLSTM, data):
 
     to_save_df = pd.DataFrame()
     for i in range(len(devices)):
-        cur_data = data[data['device'] == devices[i]]
+        cur_data = data[data['device'] == devices[i]][:72]
         cur_pred = y_pred[i].tolist()
         cur_data['datetime_aq'] = hours
         cur_data['pm25'] = cur_pred
