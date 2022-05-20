@@ -7,7 +7,6 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 
 from datetime import datetime, timedelta, timezone
-from dags.service.senderBIAPI import sendToBI
 from service.scrapeData import scrapeAllStations, scrape, scrapeAllData
 from service.senderBIAPI import sendToBI
 
