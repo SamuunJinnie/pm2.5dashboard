@@ -103,6 +103,8 @@ def live_train(data):
         cur_data['pm25'] = cur_pred
         to_save_df = pd.concat([to_save_df, cur_data])
     print(to_save_df.columns)
+    scale = 1/scaler.scale_[0]
+    to_save_df['pm25'] = to_save_df['pm25'] * scale
     to_save_df = to_save_df[['id', 'device', 'lat', 'lng', 'pm25', 'datetime_aq']][::3]
     return to_save_df
 
