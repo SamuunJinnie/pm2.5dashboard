@@ -82,6 +82,7 @@ def live_train(data):
     if exists(scaler_weight_path):
         print('----load scaler')
         scaler = joblib.load(scaler_weight_path)
+        print(scaler.scale_)
         print('----load scaler')
     else:
         scaler = MinMaxScaler()
@@ -109,7 +110,7 @@ def live_train(data):
     print(to_save_df.columns)
     scale = 1/scaler.scale_[0]
     to_save_df['pm25'] = to_save_df['pm25'] * scale
-    to_save_df = to_save_df[['id', 'device', 'lat', 'lng', 'pm25', 'datetime_aq']][::3]
+    to_save_df = to_save_df[['device', 'lat', 'lng', 'pm25', 'datetime_aq']][::3]
     return to_save_df
 
 
@@ -128,6 +129,7 @@ def inputModel():
     prediction = live_train(df)
     print("-------------------------------------------")
     print(prediction.shape)
+    print(prediction['pm25'].head(10))
     insertDFtoDB(conn,prediction,"predicted_data")
     conn.close()
 
