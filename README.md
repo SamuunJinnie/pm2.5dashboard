@@ -1,5 +1,8 @@
 # PM 2.5 Dashboard by Samun Jiratchaya
 
+## Data architecture
+<img width="580" alt="Screen Shot 2566-01-05 at 12 34 34" src="https://user-images.githubusercontent.com/69999855/210709044-747eb7e5-adb4-4efa-8c1c-7c39af667613.png">
+
 ### Note: Not compatible with M1 chip krub ajarn TT
 ### (Reccommend : Windows or Mac with intel chip)
 
